@@ -45,3 +45,52 @@ pip freeze > requirements.txt
 ```commandline
 pip install -r requirements.txt
 ```
+
+
+## Configurar AWS
+```commandline
+sudo apt update
+```
+
+```commandline
+sudo apt-get update
+```
+
+```commandline
+sudo apt upgrade -y
+```
+
+```commandline
+sudo apt install python3-pip
+```
+
+```commandline
+sudo apt install python3.10-venv
+```
+
+## Para deixar o sistema rodando, usar screen (console virtual)
+https://www.gnu.org/software/screen/manual/screen.html
+
+```commandline
+screen -S streamlit_session
+```
+
+### Para sair do console virtual
+```commandline
+ctrl+a d
+```
+
+### Para entrar novamente no console virtual
+```commandline
+screen -r streamlit_session
+```
+
+### Para visualizar os consoles virtuais rodando
+```commandline
+screen -ls
+```
+
+### Para matar o console virtual
+```commandline
+screen -X -S streamlit_session quit
+```
