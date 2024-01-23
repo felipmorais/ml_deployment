@@ -3,8 +3,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import util
-import data_handler
-import pickle
+import requests
+import json
 
 # verifica se a senha de acesso está correta
 if not util.check_password():
@@ -13,9 +13,17 @@ if not util.check_password():
 
 
 # Aqui começa a estrutura do App que vai ser executado em produção (nuvem AWS)
-dados = data_handler.load_data()
+# dados = data_handler.load_data()
+response = requests.get("http://localhost:8000/get_titanic_data") 
+dados = None
+if response.status_code == 200:
+    dados_json = json.loads(response.json())
+    dados = pd.DataFrame(dados_json)
+else: 
+    print("Error fetching the data")
+    
 
-model = pickle.load(open('./models/model.pkl', 'rb')) 
+
 
 st.title('App dos dados do Titanic')
 
@@ -39,7 +47,7 @@ if data_analyses_on:
 st.header('Preditor de sobrevivência')
 
 # ler as seguintes informações de input:
-# Pclass - int
+# Pclass - '1st', '2nd', or '3rd'
 # Sex - 'male' or 'female'
 # Age - int
 # SibSp - int
@@ -94,26 +102,6 @@ with col1:
 with col2:
     submit = st.button('Verificar')
 
-# data mapping
-
-# # Mapeia o 'Sexo' e 'Embarcado' para valores numéricos.
-# dados['Sex'] = dados['Sex'].map({'male':0, 'female':1})
-# dados['Embarked'] = dados['Embarked'].map({'C':0, 'Q':1, 'S':2}
-
-p_class_map = {
-    '1st': 1, 
-    '2nd': 2, 
-    '3rd': 3
-}
-sex_map = {
-    'Male': 0,
-    'Female': 1,
-}
-embarked_map = {
-    'Cherbourg': 0, 
-    'Queenstown': 1, 
-    'Southampton': 2
-}
 
 passageiro = {}
 
@@ -121,27 +109,32 @@ passageiro = {}
 if submit or 'survived' in st.session_state:
 
     passageiro = {
-        'Pclass': p_class_map[p_class],
-        'Sex': sex_map[sex],
+        'Pclass': p_class,
+        'Sex': sex,
         'Age': age,
         'SibSp': sib_sp,
         'Parch': par_ch,
         'Fare': fare,
-        'Embarked': embarked_map[embarked]
+        'Embarked': embarked
     }
 
-    print(passageiro)
-    values = pd.DataFrame([passageiro])
-    print(values) 
-
-    results = model.predict(values)
-    print(results)
-    if len(results) == 1:
-        survived = int(results[0])
+    # values = pd.DataFrame([passageiro])
+    # results = model.predict(values)
+    
+    passageiro_json = json.dumps(passageiro)
+    response = requests.post("http://localhost:8000/predict", json=passageiro_json) 
+    result = None
+    if response.status_code == 200:
+        result = response.json()
+    else: 
+        print("Error fetching the data")
+        
+    if result is not None:
+        survived = result
         if survived == 1:
             st.subheader('Passageiro SOBREVIVEU! 😃🙌🏻')
             if 'survived' not in st.session_state:
-                st.balloons()
+                st.balloons() 
         else:
             st.subheader('Passageiro NÃO sobreviveu! 😢')
             if 'survived' not in st.session_state:
@@ -171,8 +164,14 @@ if submit or 'survived' in st.session_state:
             passageiro['Survived'] = st.session_state['survived']
             
             st.write(message)
-            print(message)
-            data_handler.save_prediction(passageiro)
+            
+            # data_handler.save_prediction(passageiro)
+            passareiro_json = json.dumps(passageiro)
+            response = requests.post("http://localhost:8000/save_prediction", json=passareiro_json)
+            if response.status_code == 200:
+                print("Predictions saved")
+            else: 
+                print("Error fetching the data")
             
     st.write('')
     col1, col2, col3 = st.columns(3)
@@ -183,14 +182,17 @@ if submit or 'survived' in st.session_state:
             del st.session_state['survived']
             st.rerun()
 
-        # futuro
-        # media_idade = data_handler.age_calculator(dados, p_class=1, p_sex='male')
-        # print(media_idade)
-
 accuracy_predictions_on = st.toggle('Exibir acurácia')
 
 if accuracy_predictions_on:
-    predictions = data_handler.get_all_predictions()
+    # predictions = data_handler.get_all_predictions()
+    response = requests.get("http://localhost:8000/get_all_predictions") 
+    predictions = None
+    if response.status_code == 200:
+        predictions = response.json()
+    else: 
+        print("Error fetching the data")
+        
     num_total_predictions = len(predictions)
     
     accuracy_hist = [0]
