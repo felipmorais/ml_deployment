@@ -1,9 +1,9 @@
 import hmac
 import streamlit as st
-import io
-import json
-import os
 
+# essa parte do código é voltada para validar a senha de acesso ao sistema
+# a documentação pode ser encontrada aqui:
+# https://docs.streamlit.io/knowledge-base/deploy/authentication-without-sso
 def check_password():
     """Returns `True` if the user had the correct password."""
 
