@@ -5,6 +5,9 @@ import util
 import requests
 import json
 
+# para rodar esse arquivo:
+# streamlit run app.py
+
 # verifica se a senha de acesso está correta
 if not util.check_password():
     # se a senha estiver errada, para o processamento do app
@@ -18,10 +21,16 @@ if not util.check_password():
 # carrega o modelo de predição já treinado e validado
 # model = pickle.load(open('./models/model.pkl', 'rb')) 
 
-response = requests.get("http://localhost:8000/get_titanic_data") 
+API_URL = "http://localhost:8000"
+
+# faz uma requisição da API para obter todos os dados do titanic
+response = requests.get(API_URL + "/get_titanic_data") 
 dados = None
+# verifica se o status de retorno da requisição é 200, que significa sucesso
 if response.status_code == 200:
+    # se sim, carrega o retorno que está vindo em formato json
     dados_json = json.loads(response.json())
+    # transforma o json em um dataframe com todos os dados
     dados = pd.DataFrame(dados_json)
 else: 
     print("Error fetching the data")
@@ -178,14 +187,19 @@ if submit or 'survived' in st.session_state:
     # results = model.predict(values)
     # print(results)
     
+    # converte o dict do passageiro em json para enviar para a API
     passageiro_json = json.dumps(passageiro)
-    response = requests.post("http://localhost:8000/predict", json=passageiro_json) 
+    # realiza um post request para a API, passando o passageiro como parametro para realizar a predição de sobrevivencia
+    response = requests.post(API_URL + "/predict", json=passageiro_json) 
     result = None
+    # verifica o status de sucesso da requisição
     if response.status_code == 200:
+        # se houve sucesso, quer dizer que a API tem um resultado
         result = response.json()
     else: 
         print("Error fetching the data")
-        
+    
+    # verifica se o resultado não é nulo
     if result is not None:
         survived = result
         # verifica se o passageiro sobreviveu
@@ -235,8 +249,11 @@ if submit or 'survived' in st.session_state:
             # salva a predição no JSON para cálculo das métricas de avaliação do sistema
             # data_handler.save_prediction(passageiro)
             
+            # converte o dict do passageiro para json
             passareiro_json = json.dumps(passageiro)
-            response = requests.post("http://localhost:8000/save_prediction", json=passareiro_json)
+            # realiza um post request para a API salvar a predição, passando o json do passageiro como parametro
+            response = requests.post(API_URL + "/save_prediction", json=passareiro_json)
+            # verifica o retorno da API
             if response.status_code == 200:
                 print("Predictions saved")
             else: 
@@ -262,8 +279,10 @@ if accuracy_predictions_on:
     # pega todas as predições salvas no JSON
     # predictions = data_handler.get_all_predictions()
     
-    response = requests.get("http://localhost:8000/get_all_predictions") 
+    # envia um get request para pegar todas as predições já salvas na API
+    response = requests.get(API_URL + "/get_all_predictions") 
     predictions = None
+    # verifica se o status de retorno é de sucesso
     if response.status_code == 200:
         predictions = response.json()
     else: 
