@@ -5,11 +5,16 @@ import util
 import data_handler
 import pickle
 
+print("Abriu a pagina")
+
 # verifica se a senha de acesso está correta
 if not util.check_password():
     # se a senha estiver errada, para o processamento do app
+    print("Usuario nao logado")
     st.stop()
+    
 
+print("Carregou a pagina")
 
 # Aqui começa a estrutura do App que vai ser executado em produção (nuvem AWS)
 
