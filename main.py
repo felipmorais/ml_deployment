@@ -4,7 +4,7 @@ from typing import Union, Any
 import data_handler
 import json
 import pandas as pd
-import pickle
+
 
 # esse arquivo representa a API que vai ficar rodando para servir a aplicação principal
 
@@ -24,28 +24,10 @@ async def root():
 def predict(passageiro_json: Any = Body(None)):
     # carrega o json em um python dict
     passageiro = json.loads(passageiro_json)
-    
-    # mapeia os valores enviados no json para valores que o modelo ML irá entender
-    passageiro['Pclass'] = data_handler.P_CLASS_MAP[passageiro['Pclass']]
-    passageiro['Sex'] = data_handler.SEX_MAP[passageiro['Sex']]
-    passageiro['Embarked'] = data_handler.EMBARKED_MAP[passageiro['Embarked']]
-    
-    # transforma o dict do passageiro em um dataframe
-    values = pd.DataFrame([passageiro])
-    
-    # carrega o modelo de predição de sobrevivencia
-    model = pickle.load(open('./models/model.pkl', 'rb')) 
-    # realiza a predição com base no modelo carregado e nos dados recebidos como parametro da API
-    results = model.predict(values)
-    
-    # futuro: calcular a idade caso o usuário não passe
-    # media_idade = data_handler.age_calculator(dados, p_class=1, p_sex='male')
-    # print(media_idade)
-    
-    # se existir somente um resultado, já o transforma em inteiro e retorna
-    if len(results) == 1:
-        return int(results[0])
-    return None
+    # chama o método para realizar a predição passando o dict do passageiro 
+    result = data_handler.survival_predictor(passageiro)
+    # retorna o resultado
+    return result
 
 # método para retornar todos os dados dos passageiros do titanic
 @api.get("/get_titanic_data")

@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import json
+import pickle
 
 # arquivo voltado para acesso e manipulação dos dados do titanic e das predições
 
@@ -26,6 +27,33 @@ EMBARKED_MAP = {
     'Queenstown': 1, 
     'Southampton': 2
 }
+
+# método para realizar a predição de sobrevivencia do passageiro
+def survival_predictor(passageiro):
+    # mapeia os valores enviados no json para valores que o modelo ML irá entender
+    passageiro['Pclass'] = P_CLASS_MAP[passageiro['Pclass']]
+    passageiro['Sex'] = SEX_MAP[passageiro['Sex']]
+    passageiro['Embarked'] = EMBARKED_MAP[passageiro['Embarked']]
+    
+    # transforma o dict do passageiro em um dataframe
+    values = pd.DataFrame([passageiro])
+    
+    # carrega o modelo de predição de sobrevivencia
+    model = pickle.load(open('./models/model.pkl', 'rb')) 
+    # realiza a predição com base no modelo carregado e nos dados recebidos como parametro da API
+    results = model.predict(values)
+    
+    # futuro: calcular a idade caso o usuário não passe
+    # media_idade = data_handler.age_calculator(dados, p_class=1, p_sex='male')
+    # print(media_idade)
+    
+    result = None
+    
+    # se existir somente um resultado, já o transforma em inteiro e retorna
+    if len(results) == 1:
+        result = int(results[0])
+    
+    return result
 
 # realiza a carga dos dados do arquivo CSV do titanic para um dataframe pandas
 def load_data():
